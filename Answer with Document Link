@@ -1,1 +1,45 @@
+1.更新Nginx配置
+  a. 进入dify/docker/nginx/conf.d目录；
+  b. 先备份default.conf文件，例如命名为default.bk
+  c. 通过VSCode打开并编辑default.conf文件；
+  d. 在文件中增加如下配置
+     location /static_files/ {
+        alias /home/user/dify/kb/;
+        autoindex on;
+        add_header Access-Control-Allow-Origin *;
+     }
+  e. alias的目录可以自定义；
+  f. 保存并关闭default.conf
+2.更新docker-compose.yaml
+  a. 进入dify/docker目录；
+  b. 先备份docker-compose.yaml文件，例如命名为docker-compose.bk；
+  c. 通过VSCode打开并编辑docker-compose.yaml文件；
+  d. 在文件中找到nginx编辑区域，在其volumes下添加如下两行；
+     - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+     - ./nginx/kb:/home/usr/dify/kb:ro
+  e. 保存并关闭docker-compose.yaml
+3.重启容器
+  a. 通过cmd进入/dify/docker目录
+  b. 一次运行如下两个命令
+     docker compose down
+     docker compose up -d
+4.在dify工作流的知识检索后加入一个代码执行，再链接至LLM
+  a. 代码执行仅接收知识检索的参数
+  b. 代码如下：
+    from urllib.parse import quote
+    def main(arg1: list) -> dict:
+        doc_list = []
+        for item in arg1:
+            doc_name = item.get("metadata", {}).get("document_name")
+            if doc_name and doc_name not in doc_list:
+                doc_list.append(doc_name)    
+        text = ""   
+        for idx, name in enumerate(doc_list, start=1):
+            encoded = quote(name)
+            text += f"参考文档{idx}: [{name}](http://1.1.1.1/static_files/{encoded})\n"       #此处的IP请更换成自己的实际IP
+        return {
+            "result": text
+        }
+5.在工作流的最终回复中传入代码执行的结果即可
+6.将所有知识库用到的文档存放在./nginx/kb目录即可,实际目录为/dify/docker/nginx/kb
 
