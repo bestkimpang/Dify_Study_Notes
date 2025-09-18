@@ -1,0 +1,41 @@
+如果XLSX包括多个表格,需要在第二个表格前加入markdown_headers以构造表格结构，markdown_headers参考代码1--11行，第一页第二页拼接见第22--35行
+def to_markdown_table_header(headers: list) -> str:
+    title_row = "| " + " | ".join(headers) + " |"
+    separator_row = "| " + " | ".join(["---"] * len(headers)) + " |"
+    return title_row + "\n" + separator_row
+   
+def main(headers: list, values: list, output: list):
+    # 加列头
+    headers = headers + ["Scenario","Quote","Sentiment","emotion","ELLA"]    
+    # 构造表头
+    markdown_header = to_markdown_table_header(headers)
+
+    # 构造Dimension内容
+    value0 = "## Dimension_Analysis   <!-- 这行将作为第一个工作表名 -->\n\n"
+    value1 = ''
+    for v in range(len(values)):
+        row = values[v]
+        oss = eval(output[v*2])
+        #print(ops,type(ops))
+        for k in range(len(oss)):
+            ops = oss[k]
+            value1 += "| " + row + " | "+ ops["dion"] + " | "+ ops["qe"]  + " | "+ ops["sen"]  + " | "+  ops["tn"]  + " | "+  ops["EA"]  + ' |\n' 
+    value1 += '\n'
+
+    # 构造Scenario内容
+    value2 = "## Scene_Analysis   <!-- 这行将作为第二个工作表名 -->\n\n"
+    value2 += markdown_header + '\n'
+    for v in range(len(values)):
+        row = values[v]
+        oss = eval(output[v*2+1])
+        #print(ops,type(ops))
+        for k in range(len(oss)):
+            ops = oss[k]
+            value2 += "| " + row + " | "+ ops["se"] + " | "+ ops["que"]  + " | "+ ops["set"]  + " | "+  ops["em"]  + " | "+  ops["EL"]  + ' |\n' 
+    value2 += '\n'
+
+    value = value1 + value2
+    # 返回完整 Markdown 表格
+    return {
+        "result": value0 + markdown_header + "\n" + value
+    }
